@@ -15,30 +15,33 @@ def scrape_karkidi_jobs(keyword="data science", pages=1):
         url = base_url.format(page=page, query=keyword.replace(' ', '%20'))
         st.info(f"Scraping page {page}...")
         response = requests.get(url, headers=headers)
+
+        # Show a portion of the HTML to debug
+        if page == 1:
+            st.subheader("Raw HTML (first page):")
+            st.code(response.text[:2000], language="html")  # Show first 2000 characters
+
         soup = BeautifulSoup(response.content, "html.parser")
-
         job_blocks = soup.find_all("div", class_="ads-details")
+        st.warning(f"Found {len(job_blocks)} job listings using class='ads-details'")
+
         for job in job_blocks:
-            try:
-                title = job.find("h4").get_text(strip=True)
-                company = job.find("a", href=lambda x: x and "Employer-Profile" in x).get_text(strip=True)
-                location = job.find("p").get_text(strip=True)
-                experience = job.find("p", class_="emp-exp").get_text(strip=True)
-                key_skills = job.find("p", class_="job-skills").get_text(strip=True)
+            title = job.find("h4").get_text(strip=True) if job.find("h4") else "N/A"
+            company = job.find("a", href=lambda x: x and "Employer-Profile" in x).get_text(strip=True) if job.find("a", href=lambda x: x and "Employer-Profile" in x) else "N/A"
+            location = job.find("p").get_text(strip=True) if job.find("p") else "N/A"
+            experience = job.find("p", class_="emp-exp").get_text(strip=True) if job.find("p", class_="emp-exp") else "N/A"
+            key_skills = job.find("p", class_="job-skills").get_text(strip=True) if job.find("p", class_="job-skills") else "N/A"
 
-                jobs_list.append({
-                    "Title": title,
-                    "Company": company,
-                    "Location": location,
-                    "Experience": experience,
-                    "Key Skills": key_skills
-                })
-            except Exception:
-                continue
+            jobs_list.append({
+                "Title": title,
+                "Company": company,
+                "Location": location,
+                "Experience": experience,
+                "Key Skills": key_skills
+            })
 
-        time.sleep(1)
+    return jobs_list
 
-    return pd.DataFrame(jobs_list)
 
 def load_model_and_vectorizer():
     with open("karkidi_kmeans_model.pkl", "rb") as model_file:
