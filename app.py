@@ -40,7 +40,8 @@ def scrape_karkidi_jobs(keyword="data science", pages=1):
                 "Key Skills": key_skills
             })
 
-    return jobs_list
+    return pd.DataFrame(jobs_list)
+
 
 
 def load_model_and_vectorizer():
